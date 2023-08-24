@@ -25,3 +25,10 @@ INSTALLED_APPS = [
 This will add a character and word count next to where your help text would normally appear, this also works fine with help text.
 
 
+
+
+https://github.com/Sebastvin/wagtail-charcount/assets/34211633/db104d9c-1bb1-40ae-b338-cb896bb2439a
+
+
+
+
