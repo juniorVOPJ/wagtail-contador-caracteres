@@ -1,107 +1,88 @@
-$(function (){
-	// Rich text
-	var rich_text_areas = $('.rich_text_area');
-	rich_text_areas.each(function(){
-		var specificRichText = $(this)
-		var parentElement = specificRichText.parent().parent().parent().parent();
-		var helpBox = parentElement.find('.object-help');
-		if (helpBox.html()) {
-			helpBox.addClass('charcount');
-		} else {
-			var helpBoxExists = true
-			var elem = parentElement.append("<div style='opacity:1;' class='object-help help charcount'></div>");
-			var helpBox = parentElement.find('.charcount');
-			helpBox.hide();
-		}
-		var whiteSpace = /\s\s+/gm;
-		var wordsRegex = /\s+/gi;
-		var charCountElemText = helpBox.text();
-		var maxChars = specificRichText.find('textarea').attr('maxlength');
+function initializeCharacterCounter() {
+    // Locate the main editor container
+    let editorWrapper = document.querySelector('.w-field--draftail_rich_text_area');
 
-		$(specificRichText.find('.richtext')).bind('hallomodified', function(event) {
-			var text = event.currentTarget.innerText;
-			var textNoWhitespace = text.replace(whiteSpace, ' ');
-			var textWordCount = textNoWhitespace.trim().replace(wordsRegex, ' ').split(' ').length;
-			var textCharCount = textNoWhitespace.length - 1;
-			var backendCount = $(specificRichText).find('.richtext').html().length;
-			if (charCountElemText.length > 1) {
-				helpBox.css({opacity :1});
-				helpBox.html(
-					charCountElemText + '<br>' +
-					"<br>" + textWordCount + " words" +
-					"<br><span class='count'>" + backendCount + ' / ' + maxChars + '</span> characters');
-				if (backendCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (backendCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			} else {
-				helpBox.show();
-				helpBox.html(
-					textWordCount + " words" +
-					"<br><span class='count'>" + backendCount + ' / ' + maxChars + '</span> characters');
-				if (backendCount  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (backendCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			}
-		});
-	})
-	// Normal text fields
-	var text_fields = $($('form').find('.field.char_field').not('.rich_text_area'));
-	text_fields.each(function(){
-		var specificTextBox = $(this)
-		var parentElement = specificTextBox.parent().parent().parent().parent();
-		var helpBox = parentElement.find('.object-help');
-		if (helpBox.html()) {
-			helpBox.addClass('charcount');
-		} else {
-			var helpBoxExists = true
-			var elem = parentElement.append("<div style='opacity:1;' class='object-help help charcount'></div>");
-			var helpBox = parentElement.find('.charcount');
-			helpBox.hide();
-		}
-		var whiteSpace = /\s\s+/gm;
-		var wordsRegex = /\s+/gi;
-		var charCountElemText = helpBox.text();
-		var maxChars = specificTextBox.find('input').attr('maxlength');
+    // If the editor container doesn't exist, exit the script.
+    if (!editorWrapper) {
+        return;
+    }
 
-		$(specificTextBox.find('input')).bind('input propertychange', function() {
-			var text = this.value;
-			var textNoWhitespace = text.replace(whiteSpace, ' ');
-			var textCharCount = textNoWhitespace.length;
-			if (textCharCount == 0) {
-				var textWordCount = 0
-			} else {
-				var textWordCount = textNoWhitespace.trim().replace(wordsRegex, ' ').split(' ').length;
-			}
-			if (charCountElemText.length > 1) {
-				helpBox.css({opacity :1});
-				var helpBoxContent = (charCountElemText + '<br>' +
-					"<br>" + textWordCount + " words" +
-					"<br><span class='count'>" + textCharCount + ' / ' + maxChars + '</span> characters');
+    // Create an element for the character counter
+    let charCounter = document.createElement('div');
+    charCounter.id = 'char-counter';
 
-				helpBox.html(helpBoxContent);
-				if (textCharCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (textCharCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			} else {
-				helpBox.show();
-				helpBox.html(
-					textWordCount + " words" +
-					"<br><span class='count'>" + textCharCount + ' / ' + maxChars + '</span> characters'
-				);
-				if (textCharCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (textCharCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			}
-		});
-	})
+    // Create an element for the word counter
+    let wordCounter = document.createElement('div');
+    wordCounter.id = 'word-counter';
+
+    // Add the character and word counters directly below the editor container
+    editorWrapper.parentNode.insertBefore(charCounter, editorWrapper.nextSibling);
+    editorWrapper.parentNode.insertBefore(wordCounter, charCounter.nextSibling);
+
+    // Locate the contenteditable element
+    let textField = editorWrapper.querySelector('.DraftEditor-editorContainer [contenteditable="true"]');
+
+    // Function to update the character and word count
+    const updateCounter = () => {
+        // Get the raw text from the editor
+        const textContent = textField.textContent || "";
+
+        // Count words. A word is defined as a sequence of non-space characters separated by spaces.
+        const wordCount = textContent.split(/\s+/).filter(Boolean).length;
+
+        charCounter.innerText = `Characters: ${textContent.length}`;
+        wordCounter.innerText = `Words: ${wordCount}`;
+    };
+
+    // Update the character and word count in response to changes in the editor
+    textField.addEventListener('input', updateCounter);
+
+    // Handle keydown event (especially backspace/delete)
+    textField.addEventListener('keydown', function(event) {
+        // Check for backspace or delete keys
+        if (event.keyCode === 8 || event.keyCode === 46) {
+            setTimeout(updateCounter, 50);
+        }
+    });
+
+    // Handle pasted text with a delay
+    textField.addEventListener('paste', function(event) {
+        setTimeout(updateCounter, 50);  // Update the counter after a short delay
+    });
+
+    // Initial update to set initial values
+    updateCounter();
+}
 
 
-});
+// Function to initialize the mutation observer
+function initObserver() {
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                // For each added node
+                for (let i = 0; i < mutation.addedNodes.length; i++) {
+                    const node = mutation.addedNodes[i];
+
+                    // If the new node contains our editor
+                    if (node.querySelector && node.querySelector('.w-field--draftail_rich_text_area')) {
+                        initializeCharacterCounter();
+                    }
+                }
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,  // observe direct children
+        subtree: true,    // also observe all descendant nodes
+        attributes: false,
+        characterData: false,
+    });
+}
+
+window.addEventListener('load', initObserver);
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharacterCounter();
+})

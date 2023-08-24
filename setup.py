@@ -3,14 +3,14 @@
 Install wagtail-charcount using setuptools
 """
 
-with open('README.rst', 'r') as f:
+with open('README.md', 'r') as f:
     readme = f.read()
 
 from setuptools import find_packages, setup
 
 setup(
     name='wagtail-charcount',
-    version='0.1.2',
+    version='0.1.3',
     description="A wagtail character and word counting plugin for RichTextFields.",
     long_description=readme,
     author='Liam Brenner',
