@@ -13,6 +13,7 @@ setup(
     version="0.2.0",
     description="A wagtail character and word counting plugin for RichTextFields.",
     long_description=readme,
+    long_description_content_type="text/markdown",
     author="Liam Brenner",
     author_email="liam@takeflight.com.au",
     url="https://github.com/takeflight/wagtail-charcount",
