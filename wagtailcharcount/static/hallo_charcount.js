@@ -1,107 +1,76 @@
-$(function (){
-	// Rich text
-	var rich_text_areas = $('.rich_text_area');
-	rich_text_areas.each(function(){
-		var specificRichText = $(this)
-		var parentElement = specificRichText.parent().parent().parent().parent();
-		var helpBox = parentElement.find('.object-help');
-		if (helpBox.html()) {
-			helpBox.addClass('charcount');
-		} else {
-			var helpBoxExists = true
-			var elem = parentElement.append("<div style='opacity:1;' class='object-help help charcount'></div>");
-			var helpBox = parentElement.find('.charcount');
-			helpBox.hide();
-		}
-		var whiteSpace = /\s\s+/gm;
-		var wordsRegex = /\s+/gi;
-		var charCountElemText = helpBox.text();
-		var maxChars = specificRichText.find('textarea').attr('maxlength');
+/**
+ * Initializes character and word counters for all richtext fields on the page.
+ */
+function initializeCharacterCounters() {
+  // Locate all main editor containers
+  const editorWrappers = document.querySelectorAll('.w-field--draftail_rich_text_area');
 
-		$(specificRichText.find('.richtext')).bind('hallomodified', function(event) {
-			var text = event.currentTarget.innerText;
-			var textNoWhitespace = text.replace(whiteSpace, ' ');
-			var textWordCount = textNoWhitespace.trim().replace(wordsRegex, ' ').split(' ').length;
-			var textCharCount = textNoWhitespace.length - 1;
-			var backendCount = $(specificRichText).find('.richtext').html().length;
-			if (charCountElemText.length > 1) {
-				helpBox.css({opacity :1});
-				helpBox.html(
-					charCountElemText + '<br>' +
-					"<br>" + textWordCount + " words" +
-					"<br><span class='count'>" + backendCount + ' / ' + maxChars + '</span> characters');
-				if (backendCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (backendCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			} else {
-				helpBox.show();
-				helpBox.html(
-					textWordCount + " words" +
-					"<br><span class='count'>" + backendCount + ' / ' + maxChars + '</span> characters');
-				if (backendCount  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (backendCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			}
-		});
-	})
-	// Normal text fields
-	var text_fields = $($('form').find('.field.char_field').not('.rich_text_area'));
-	text_fields.each(function(){
-		var specificTextBox = $(this)
-		var parentElement = specificTextBox.parent().parent().parent().parent();
-		var helpBox = parentElement.find('.object-help');
-		if (helpBox.html()) {
-			helpBox.addClass('charcount');
-		} else {
-			var helpBoxExists = true
-			var elem = parentElement.append("<div style='opacity:1;' class='object-help help charcount'></div>");
-			var helpBox = parentElement.find('.charcount');
-			helpBox.hide();
-		}
-		var whiteSpace = /\s\s+/gm;
-		var wordsRegex = /\s+/gi;
-		var charCountElemText = helpBox.text();
-		var maxChars = specificTextBox.find('input').attr('maxlength');
+  // If no editor containers exist, exit the function.
+  if (!editorWrappers.length) {
+    return;
+  }
 
-		$(specificTextBox.find('input')).bind('input propertychange', function() {
-			var text = this.value;
-			var textNoWhitespace = text.replace(whiteSpace, ' ');
-			var textCharCount = textNoWhitespace.length;
-			if (textCharCount == 0) {
-				var textWordCount = 0
-			} else {
-				var textWordCount = textNoWhitespace.trim().replace(wordsRegex, ' ').split(' ').length;
-			}
-			if (charCountElemText.length > 1) {
-				helpBox.css({opacity :1});
-				var helpBoxContent = (charCountElemText + '<br>' +
-					"<br>" + textWordCount + " words" +
-					"<br><span class='count'>" + textCharCount + ' / ' + maxChars + '</span> characters');
+  // Iterate over each editor container
+  editorWrappers.forEach((editorWrapper, index) => {
+    // Create an element for the character counter
+    const charCounter = document.createElement('div');
+    charCounter.className = `char-counter-${index}`;
 
-				helpBox.html(helpBoxContent);
-				if (textCharCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (textCharCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			} else {
-				helpBox.show();
-				helpBox.html(
-					textWordCount + " words" +
-					"<br><span class='count'>" + textCharCount + ' / ' + maxChars + '</span> characters'
-				);
-				if (textCharCount > maxChars) {
-					$(helpBox.find('.count')).css({color: 'red'})
-				} else if (textCharCount + 20  > maxChars) {
-					$(helpBox.find('.count')).css({color: 'orange'})
-				}
-			}
-		});
-	})
+    // Create an element for the word counter
+    const wordCounter = document.createElement('div');
+    wordCounter.className = `word-counter-${index}`;
 
+    // Append the counters directly below the editor container
+    editorWrapper.parentNode.insertBefore(charCounter, editorWrapper.nextSibling);
+    editorWrapper.parentNode.insertBefore(wordCounter, charCounter.nextSibling);
 
-});
+    // Locate the contenteditable element
+    const textField = editorWrapper.querySelector('.DraftEditor-editorContainer [contenteditable="true"]');
+
+    // Function to update the character and word count
+    const updateCounter = () => {
+      const textContent = textField.textContent || "";
+      const wordCount = textContent.split(/\s+/).filter(Boolean).length;
+      charCounter.innerText = `Characters: ${textContent.length}`;
+      wordCounter.innerText = `Words: ${wordCount}`;
+    };
+
+    // Attach event listeners
+    textField.addEventListener('input', updateCounter);
+    textField.addEventListener('keydown', (event) => {
+      if (event.keyCode === 8 || event.keyCode === 46) {
+        setTimeout(updateCounter, 50);
+      }
+    });
+    textField.addEventListener('paste', () => setTimeout(updateCounter, 50));
+
+    // Set initial values
+    updateCounter();
+  });
+}
+
+/**
+ * Initializes the mutation observer to monitor for added richtext fields.
+ */
+function initObserver() {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+        for (const node of mutation.addedNodes) {
+          if (node.querySelector && node.querySelector('.w-field--draftail_rich_text_area')) {
+            initializeCharacterCounters();
+          }
+        }
+      }
+    });
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+// Initialize on page load and DOMContentLoaded
+window.addEventListener('load', initObserver);
+document.addEventListener('DOMContentLoaded', initializeCharacterCounters);
