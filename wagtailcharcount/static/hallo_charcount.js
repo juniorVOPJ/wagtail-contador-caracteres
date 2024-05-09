@@ -31,8 +31,8 @@ function initializeCharacterCounters() {
     const updateCounter = () => {
       const textContent = textField.textContent || "";
       const wordCount = textContent.split(/\s+/).filter(Boolean).length;
-      charCounter.innerText = `Characters: ${textContent.length}`;
-      wordCounter.innerText = `Words: ${wordCount}`;
+      charCounter.innerText = `Caracteres: ${textContent.length}`;
+      wordCounter.innerText = `Palavras: ${wordCount}`;
     };
 
     // Attach event listeners
