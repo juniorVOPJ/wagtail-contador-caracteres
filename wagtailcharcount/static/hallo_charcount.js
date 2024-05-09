@@ -28,16 +28,26 @@ function initializeCharacterCounters() {
     const textField = editorWrapper.querySelector('.DraftEditor-editorContainer [contenteditable="true"]');
 
     // Function to update the character and word count
+    // UPDATE => Plural and portuguese language
     const updateCounter = () => {
       const textContent = textField.textContent || "";
       const wordCount = textContent.split(/\s+/).filter(Boolean).length;
-      charCounter.innerText = `Caracteres: ${textContent.length}`;
-      wordCounter.innerText = `Palavras: ${wordCount}`;
+      if (textContent.length == 0 || textContent.length <=1){
+        charCounter.innerText = `Caracter: ${textContent.length}`;
+      }else{
+        charCounter.innerText = `Caracteres: ${textContent.length}`;
+      }
+      if (wordCount == 0 || wordCount <= 1){
+        wordCounter.innerText = `Palavra: ${wordCount}`;
+      }else{
+        wordCounter.innerText = `Palavras: ${wordCount}`;
+      }
     };
-
+    
     // Attach event listeners
-    textField.addEventListener('input', updateCounter);
-    textField.addEventListener('keydown', (event) => {
+    // UPDATE => Event key up is more accurate
+    textField.addEventListener('keyup', updateCounter);
+    textField.addEventListener('keyup', (event) => {
       if (event.keyCode === 8 || event.keyCode === 46) {
         setTimeout(updateCounter, 50);
       }
